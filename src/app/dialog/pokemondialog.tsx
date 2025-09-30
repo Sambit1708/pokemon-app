@@ -1,18 +1,16 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { Poppins } from "next/font/google";
+import React, { useState } from "react";
 import Dialog from "@mui/material/Dialog";
 import Typography from "@mui/material/Typography";
-import { Avatar, Box, Card, CardMedia, Grid, Paper } from "@mui/material";
+import { Box, CardMedia, Grid, Paper } from "@mui/material";
 import CatchingPokemonIcon from "@mui/icons-material/CatchingPokemon";
-import Tab from "@mui/material/Tab";
 import TabContext from "@mui/lab/TabContext";
-import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import { PokemonAPIService, Pokemons } from "../service/PokemonAPIService";
+import { Pokemons } from "../service/PokemonAPIService";
 import { CommonUtils } from "../common/common";
+import { typeColors } from "../common/colors";
 
 const b1Style = {
   display: "flex",
@@ -38,38 +36,6 @@ const b2Style = {
   overflow: "hidden",
 };
 
-const typeColors: Record<string, string> = {
-  Normal: "#A8A77A",
-  Fire: "#EE8130",
-  Water: "#6390F0",
-  Grass: "#7AC74C",
-  Electric: "#F7D02C",
-  Ice: "#96D9D6",
-  Fighting: "#C22E28",
-  Poison: "#A33EA1",
-  Ground: "#E2BF65",
-  Flying: "#A98FF3",
-  Bug: "#A6B91A",
-  Rock: "#B6A136",
-  Ghost: "#735797",
-  Dragon: "#6F35FC",
-  Dark: "#705746",
-  Steel: "#B7B7CE",
-  Fairy: "#D685AD",
-};
-const pastelColors = [
-  "#FFD1DC",
-  "#C1F0F6",
-  "#FEE1A8",
-  "#C1E1C1",
-  "#E6C9E0",
-  "#FFE3E3",
-  "#D1F5E0",
-  "#FCE1A8",
-  "#D1C4E9",
-  "#B2EBF2",
-];
-
 export interface PokemonDialogProps {
   open: boolean;
   pokemon: Pokemons;
@@ -94,10 +60,6 @@ export default function PokemonDialog(props: PokemonDialogProps) {
   const handleClose = () => {
     onClose(open ? value : "1");
     setValue("1");
-  };
-
-  const handleListItemClick = (value: string) => {
-    onClose(value);
   };
 
   return (
@@ -199,20 +161,23 @@ export default function PokemonDialog(props: PokemonDialogProps) {
                 <TabPanel value="1">
                   <CardMedia
                     component="img"
-                    image={pokemon?.sprites?.official_artwork || ""}
+                    image={pokemon?.sprites?.officialArtwork || ""}
                     alt={pokemon?.name || "Pokemon"}
                     sx={{
                       bgcolor: typeColors[CommonUtils.capitalizeFirstLetter(pokemon?.types?.at(0) || "Normal")] || "#f7f7f7",
                       width: 200,
                       padding: 1,
                       borderRadius: 2,
+                    }}
+                    onError={(e) => {
+                      e.currentTarget.src = "/placeholder.png";
                     }}
                   />
                 </TabPanel>
                 <TabPanel value="2">
                   <CardMedia
                     component="img"
-                    image={pokemon?.sprites?.front_default || ""}
+                    image={pokemon?.sprites?.frontDefault || ""}
                     alt={pokemon?.name || "Pokemon"}
                     sx={{
                       width: 200,
@@ -220,18 +185,24 @@ export default function PokemonDialog(props: PokemonDialogProps) {
                       bgcolor: typeColors[CommonUtils.capitalizeFirstLetter(pokemon?.types?.at(0) || "Normal")] || "#f7f7f7",
                       borderRadius: 2,
                     }}
+                    onError={(e) => {
+                      e.currentTarget.src = "/placeholder.png";
+                    }}
                   />
                 </TabPanel>
                 <TabPanel value="3">
                   <CardMedia
                     component="img"
-                    image={pokemon?.sprites?.back_default || ""}
+                    image={pokemon?.sprites?.backDefault || ""}
                     alt={pokemon?.name || "Pokemon"}
                     sx={{
                       width: 200,
                       padding: 1,
                       bgcolor: typeColors[CommonUtils.capitalizeFirstLetter(pokemon?.types?.at(0) || "Normal")] || "#f7f7f7",
                       borderRadius: 2,
+                    }}
+                    onError={(e) => {
+                      e.currentTarget.src = "/placeholder.png";
                     }}
                   />
                 </TabPanel>
@@ -240,6 +211,7 @@ export default function PokemonDialog(props: PokemonDialogProps) {
           </Box>
           <Box sx={{ marginBottom: 2, paddingX: 3 }}>
             <Grid container spacing={2}>
+              {/* ... grid items with proper null checks ... */}
               <Grid size={3}>
                 <Typography fontWeight={600} color="#333" sx={{ width: "40%", fontFamily: "Poppins" }}>
                   Height
@@ -247,7 +219,7 @@ export default function PokemonDialog(props: PokemonDialogProps) {
               </Grid>
               <Grid size={3}>
                 <Typography color="#555" sx={{ textAlign: "left", fontFamily: "Poppins" }}>
-                  {pokemon?.height || 0} m
+                  {pokemon.height || 0} m
                 </Typography>
               </Grid>
               <Grid size={3}>
@@ -257,7 +229,7 @@ export default function PokemonDialog(props: PokemonDialogProps) {
               </Grid>
               <Grid size={3}>
                 <Typography color="#555" sx={{ textAlign: "left", fontFamily: "Poppins" }}>
-                  {pokemon?.weight || 0} kg
+                  {pokemon.weight || 0} kg
                 </Typography>
               </Grid>
               <Grid size={3}>
@@ -267,7 +239,7 @@ export default function PokemonDialog(props: PokemonDialogProps) {
               </Grid>
               <Grid size={9}>
                 <Typography color="#555" sx={{ textAlign: "left", fontFamily: "Poppins" }}>
-                  {pokemon?.region || ""}
+                  {pokemon.region || "Unknown"}
                 </Typography>
               </Grid>
               <Grid size={3}>
@@ -277,7 +249,7 @@ export default function PokemonDialog(props: PokemonDialogProps) {
               </Grid>
               <Grid size={9}>
                 <Typography color="#555" sx={{ textAlign: "left", fontFamily: "Poppins" }}>
-                  {pokemon?.types?.join(", ") || ""}
+                  {pokemon.types?.join(", ") || "Unknown"}
                 </Typography>
               </Grid>
               <Grid size={3}>
@@ -287,7 +259,7 @@ export default function PokemonDialog(props: PokemonDialogProps) {
               </Grid>
               <Grid size={9}>
                 <Typography color="#555" sx={{ textAlign: "left", fontFamily: "Poppins" }}>
-                  {pokemon?.weaknesses?.join(", ") || ""}
+                  {pokemon.weaknesses?.join(", ") || "Unknown"}
                 </Typography>
               </Grid>
             </Grid>

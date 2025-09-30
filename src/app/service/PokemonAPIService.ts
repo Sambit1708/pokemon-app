@@ -6,9 +6,9 @@ export interface Stats {
 }
 
 export interface Sprites {
-    front_default: string;
-    back_default: string;
-    official_artwork: string;
+    frontDefault: string;
+    backDefault: string;
+    officialArtwork: string;
 }
 
 export interface Pokemons {
@@ -25,24 +25,31 @@ export interface Pokemons {
 
 const POKEMON_BASE_API = "/api/v1/pokemon"
 
+interface ApiResponse<T> {
+  data: T;
+  responseMessage: string;
+  responseCode: string;
+  httpStatus: string;
+}
+
 export class PokemonAPIService {
-  async getPokemonList(): Promise<Pokemons[]> {
+  async getPokemonList(limit: number, offset: number): Promise<Pokemons[]> {
     try {
-      const response = await API.get<Pokemons[]>(POKEMON_BASE_API);
-      return response.data;
+      const response = await API.get<ApiResponse<Pokemons[]>>(POKEMON_BASE_API+ `?limit=${limit}&offset=${offset}`);
+      return response.data.data || [];
     } catch (error) {
       console.error("Failed to fetch pokemon list", error);
-      return [];
+      throw new Error("Unable to load Pokémon list. Please try again later.");
     }
   }
 
-  async getPokemonDetail(id: number): Promise<Pokemons> {
+  async getPokemonDetail(id: number): Promise<Pokemons | null> {
     try {
-      const response = await API.get<Pokemons>(POKEMON_BASE_API + `/${id}`);
-      return response.data;
+      const response = await API.get<ApiResponse<Pokemons>>(POKEMON_BASE_API + `/${id}`);
+      return response.data.data || null;
     } catch (error) {
-      console.error("Failed to fetch pokemon list", error);
-      return {} as Pokemons;
+      console.error(`Failed to fetch pokemon detail for ID ${id}`, error);
+      throw new Error(`Unable to load Pokémon details for ID ${id}.`);
     }
   }
 }

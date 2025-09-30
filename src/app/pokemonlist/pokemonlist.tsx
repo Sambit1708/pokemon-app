@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Card,
@@ -13,40 +13,10 @@ import SearchIcon from "@mui/icons-material/Search";
 import PokemonDialog from "../dialog/pokemondialog";
 import { PokemonAPIService, Pokemons } from "../service/PokemonAPIService";
 import { CommonUtils } from "../common/common";
+import { pastelColors, typeColors } from "../common/colors";
 
 const poppins = Poppins({ subsets: ["latin"], weight: ["400", "500", "700"] });
-const typeColors: Record<string, string> = {
-  Normal: "#A8A77A",
-  Fire: "#EE8130",
-  Water: "#6390F0",
-  Grass: "#7AC74C",
-  Electric: "#F7D02C",
-  Ice: "#96D9D6",
-  Fighting: "#C22E28",
-  Poison: "#A33EA1",
-  Ground: "#E2BF65",
-  Flying: "#A98FF3",
-  Bug: "#A6B91A",
-  Rock: "#B6A136",
-  Ghost: "#735797",
-  Dragon: "#6F35FC",
-  Dark: "#705746",
-  Steel: "#B7B7CE",
-  Fairy: "#D685AD",
-};
 
-const pastelColors = [
-  "#FFD1DC",
-  "#C1F0F6",
-  "#FEE1A8",
-  "#C1E1C1",
-  "#E6C9E0",
-  "#FFE3E3",
-  "#D1F5E0",
-  "#FCE1A8",
-  "#D1C4E9",
-  "#B2EBF2",
-];
 
 export const usePokemons = () => {
   const [pokemons, setPokemons] = useState<Pokemons[]>([]);
@@ -56,10 +26,10 @@ export const usePokemons = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await new PokemonAPIService().getPokemonList();
+        const data = await new PokemonAPIService().getPokemonList(100, 0);
         setPokemons(data);
       } catch (err) {
-        setError("Failed to load Pokémon.");
+        setError(err instanceof Error ? err.message : "Failed to load Pokémon.");
       } finally {
         setLoading(false);
       }
@@ -72,20 +42,27 @@ export const usePokemons = () => {
 
 export default function PokemonList() {
   const { pokemons, loading, error } = usePokemons();
-  const [ searchText, setSearchText ] = useState("");
-  const [ open, setOpen ] = useState(false);
-  const [ pokemon, setPokemon ] = useState({} as Pokemons);
+  const [searchText, setSearchText] = useState("");
+  const [open, setOpen] = useState(false);
+  const [selectedPokemon, setSelectedPokemon] = useState<Pokemons | null>(null);
+
+  const filteredPokemons = useMemo(() => {
+    return pokemons.filter(pokemon => 
+      pokemon.name.toLowerCase().includes(searchText.toLowerCase())
+    );
+  }, [pokemons, searchText]);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
 
-  const handleClickOpen = (pokemonVal: Pokemons) => {
+  const handleClickOpen = (pokemon: Pokemons) => {
     setOpen(true);
-    setPokemon(pokemonVal);
+    setSelectedPokemon(pokemon);
   };
 
   const handleClose = (value: string) => {
     setOpen(false);
+    setSelectedPokemon(null);
   };
 
   return (
@@ -136,14 +113,11 @@ export default function PokemonList() {
               padding: 2,
             }}
           >
-            {pokemons
-              .filter((item, i) =>
-                item.name.toLowerCase().includes(searchText.toLowerCase())
-              )
-              .map((item, i) => (
+            {filteredPokemons
+              .map((pokemon) => (
                 <Card
-                  key={i}
-                  onClick={() => handleClickOpen(item)}
+                  key={pokemon.id}
+                  onClick={() => handleClickOpen(pokemon)}
                   sx={{
                     width: 250,
                     height: 100,
@@ -163,21 +137,25 @@ export default function PokemonList() {
                     <CardMedia
                       component="img"
                       height="80"
-                      image={item.sprites.official_artwork}
-                      alt={item.name}
+                      image={pokemon.sprites.officialArtwork}
+                      alt={pokemon.name}
                       sx={{
-                        padding: 1,
-                        bgcolor: typeColors[CommonUtils.capitalizeFirstLetter(item.types[0])] || pastelColors[i % pastelColors.length],
-                        borderRadius: 2,
+                          padding: 1,
+                          bgcolor: typeColors[CommonUtils.capitalizeFirstLetter(pokemon.types[0])] || 
+                                pastelColors[pokemon.id % pastelColors.length],
+                          borderRadius: 2,
+                        }}
+                      onError={(e) => {
+                        e.currentTarget.src = "/placeholder.png";
                       }}
                     />
                   </Box>
                   <Box sx={{ marginLeft: 2, paddingTop: 2 }}>
                     <Typography variant="h6" sx={{ fontFamily: "Poppins" }}>
-                      {item.name}
+                      {pokemon.name}
                     </Typography>
                     <Typography sx={{ color: "gray", fontSize: 12 }}>
-                      {item.types.join(", ")}
+                      {pokemon.types.join(", ")}
                     </Typography>
                   </Box>
                 </Card>
@@ -185,12 +163,14 @@ export default function PokemonList() {
           </Box>
         </Card>
       </div>
-      <PokemonDialog
-        index={pokemons.indexOf(pokemon) + 1}
-        pokemon={pokemon}
-        open={open}
-        onClose={handleClose}
-      />
+       {selectedPokemon && (
+        <PokemonDialog
+          index={pokemons.findIndex(p => p.id === selectedPokemon.id) + 1}
+          pokemon={selectedPokemon}
+          open={open}
+          onClose={handleClose}
+        />
+      )}
     </div>
   );
 }
